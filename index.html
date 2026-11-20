@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bilal Raza - Collection Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif}
+body{background:#0f0f2d;color:#fff;padding:15px}
+.header{text-align:center;background:#1a1a4d;border:3px solid #5ee8b5;border-radius:20px;padding:20px;margin-bottom:15px}
+.header h1{font-size:28px;color:#5ee8b5}
+.header h2{font-size:22px;margin:5px 0}
+.header p{opacity:.8;font-size:13px}
+.tabs{display:flex;gap:10px;margin-bottom:15px}
+.tabs button{flex:1;padding:14px;border:none;border-radius:12px;font-size:16px;font-weight:bold;cursor:pointer;background:#2a2a5d;color:#fff}
+.tabs button.active{background:#5ee8b5;color:#000}
+.card{background:#1e1e4d;border-radius:15px;padding:15px;margin-bottom:12px}
+.card h3{margin-bottom:10px;color:#5ee8b5}
+input,select{width:100%;padding:12px;margin:7px 0;border-radius:10px;border:none;font-size:15px}
+.btn{width:100%;padding:14px;border:none;border-radius:12px;background:#5ee8b5;color:#000;font-size:17px;font-weight:bold;cursor:pointer;margin-top:10px}
+.stats{display:flex;gap:10px}
+.stat{flex:1;background:#2a2a5d;border-radius:12px;padding:12px;text-align:center}
+.stat b{font-size:22px;color:#5ee8b5;display:block}
+.member{display:flex;justify-content:space-between;align-items:center;background:#2a2a5d;padding:12px;border-radius:12px;margin:7px 0}
+.paid{color:#5ee8b5;font-weight:bold}
+.unpaid{color:#ff6b6b;font-weight:bold}
+.del{background:#ff4444;color:#fff;border:none;padding:6px 10px;border-radius:8px;cursor:pointer}
+.small{font-size:12px;opacity:.7;text-align:center;margin-top:10px}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <h1>Bilal</h1>
+  <h2>RAZA COLLECTION</h2>
+  <p>Group Leader: Bilal Raza | Total Members: 10</p>
+</div>
+
+<div class="tabs">
+  <button id="tab1" class="active" onclick="show('form')">💰 Paise Jama Karo</button>
+  <button id="tab2" onclick="show('dash')">📊 Dashboard</button>
+</div>
+
+<!-- FORM -->
+<div id="formPage">
+  <div class="card">
+    <h3>Paise Jama Karne Ka Form</h3>
+    <input id="name" placeholder="Apna Naam Likho">
+    <input id="amount" type="number" placeholder="Kitne Paise Diye? Ex: 500">
+    <select id="method">
+      <option>Cash</option>
+      <option>UPI / GPay / PhonePe</option>
+      <option>Bank Transfer</option>
+    </select>
+    <input id="utr" placeholder="UTR No. / Note (Optional)">
+    <button class="btn" onclick="addEntry()">✅ Jama Karo</button>
+  </div>
+  <p class="small">Form bharte hi entry Dashboard me chali jayegi</p>
+</div>
+
+<!-- DASHBOARD -->
+<div id="dashPage" style="display:none">
+  <div class="stats">
+    <div class="stat"><span>Total Collection</span><b id="total">₹0</b></div>
+    <div class="stat"><span>Total Entries</span><b id="count">0</b></div>
+  </div>
+  <div class="card">
+    <h3>📋 Sabki Entry</h3>
+    <div id="list"></div>
+  </div>
+  <button class="btn" onclick="shareDash()">🔗 Dashboard Link Share Karo</button>
+  <button class="btn" style="background:#ff6b6b;color:#fff" onclick="clearAll()">🗑️ Sab Clear Karo</button>
+</div>
+
+<script>
+let data = JSON.parse(localStorage.getItem('bilal_data')||'[]');
+function show(p){
+  document.getElementById('formPage').style.display = p==='form'?'block':'none';
+  document.getElementById('dashPage').style.display = p==='dash'?'block':'none';
+  document.getElementById('tab1').className = p==='form'?'active':'';
+  document.getElementById('tab2').className = p==='dash'?'active':'';
+  if(p==='dash') render();
+}
+function addEntry(){
+  let n=document.getElementById('name').value.trim();
+  let a=document.getElementById('amount').value;
+  let m=document.getElementById('method').value;
+  let u=document.getElementById('utr').value;
+  if(!n||!a){alert('Naam aur Paise dono likho bhai');return;}
+  data.push({name:n,amount:Number(a),method:m,utr:u,date:new Date().toLocaleString('en-IN')});
+  localStorage.setItem('bilal_data',JSON.stringify(data));
+  alert('Ho Gaya! ₹'+a+' Jama Ho Gaya');
+  document.getElementById('name').value='';document.getElementById('amount').value='';document.getElementById('utr').value='';
+  show('dash');
+}
+function render(){
+  let total=data.reduce((s,x)=>s+x.amount,0);
+  document.getElementById('total').innerText='₹'+total;
+  document.getElementById('count').innerText=data.length;
+  let html='';
+  if(data.length==0) html='<p>Koi entry abhi nahi hai</p>';
+  data.slice().reverse().forEach((x,i)=>{
+    html+=`<div class="member"><div><b>${x.name}</b><br><small>${x.date} | ${x.method} ${x.utr?'| '+x.utr:''}</small></div><div><span class="paid">₹${x.amount}</span><br><button class="del" onclick="del(${data.length-1-i})">Delete</button></div></div>`;
+  });
+  document.getElementById('list').innerHTML=html;
+}
+function del(i){ if(confirm('Delete karein?')){data.splice(i,1);localStorage.setItem('bilal_data',JSON.stringify(data));render();} }
+function clearAll(){ if(confirm('Sab data delete karein?')){data=[];localStorage.removeItem('bilal_data');render();} }
+function shareDash(){ let t='Bilal Raza Collection Dashboard%0A%0ATotal: ₹'+data.reduce((s,x)=>s+x.amount,0)+'%0AEntries: '+data.length; window.open('https://wa.me/?text='+t,'_blank'); }
+render();
+</script>
+</body>
+      </html>
